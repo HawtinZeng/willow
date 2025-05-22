@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!-- Example LearnWebGL HTML file, by Wayne Brown, Fall 2015 -->
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="keywords" content="Learn, WebGL, tutorial, example" />
+    <meta
+      name="description"
+      content="WebGL tutorials - experiment with events"
+    />
+    <meta name="author" content="Wayne Brown" />
+    <title>WebGL Example</title>
+    <script src="../../lib/jquery.js"></script>
+    <link rel="stylesheet" href="../../lib/webglcode.css" />
+  </head>
+
+  <body>
+    <p>Experiment with event handlers.</p>
+
+    <!--The canvas window for rendering 3D graphics -->
+    <canvas id="W1_canvas" class="canvas3D">
+      Please use a browser that supports "canvas"
+    </canvas>
+    <br />
+
+    <!-- An HTML control element that can be used to modify the rendering behavior -->
+    <input type="checkbox" id="my_pause" checked /> Animate<br />
+
+    <!-- Load the JavaScript libraries and data files for the WebGL rendering -->
+    <script src="../../lib/learn_webgl.js"></script>
+    <script src="../../lib/learn_webgl_console_messages.js"></script>
+    <script src="../../lib/learn_webgl_point4.js"></script>
+    <script src="../../lib/learn_webgl_vector3.js"></script>
+    <script src="../../lib/learn_webgl_matrix.js"></script>
+    <script src="../../lib/learn_webgl_model_01.js"></script>
+    <script src="../../lib/learn_webgl_vob_model_01.js"></script>
+    <script src="./event_experiments_render_01.js"></script>
+    <script src="./event_experiments_events_01.js"></script>
+
+    <!--
+  Create an instance of the learn_webgl class, and start the WebGL program.
+  We do this here to pass the canvas ID into the javascript code.
+-->
+    <script>
+      var models = ["../../lib/models/model_cone4.obj"];
+      var shaders = [
+        "../../lib/shaders/shader05.vert",
+        "../../lib/shaders/shader05.frag",
+      ];
+      var controls = ["my_pause"];
+      var my_program = new Learn_webgl(
+        "W1_canvas",
+        "Scene_event_experiments_render",
+        models,
+        shaders,
+        controls
+      );
+    </script>
+  </body>
+</html>

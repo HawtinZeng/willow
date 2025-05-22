@@ -1,0 +1,19 @@
+{
+  "name": "willow",
+  "version": "1.0.0",
+  "module": "willow.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "rollup -c -w"
+  },
+  "author": "zenghawtin",
+  "license": "ISC",
+  "description": "This is my first 3d engine exploration",
+  "devDependencies": {
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "rollup": "^4.36.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "typescript": "^5.8.3"
+  }
+}

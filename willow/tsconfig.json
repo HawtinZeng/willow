@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "esnext",
+    "declaration": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "outDir": "./dist/",
+    "allowJs": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
