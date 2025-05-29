@@ -3,8 +3,10 @@ import { Material } from "../materials/Basematerial";
 import { ColorManagement } from "../math/ColorManagement";
 import { Matrix3 } from "../math/Matrix3";
 import { Vector3 } from "../math/Vector3";
+import { fragmentExample } from "./fragment.gl";
 import { ShaderLib } from "./ShaderLib";
 import { ShaderChunk } from "./shaders/ShaderChunk";
+import { vertexExample } from "./vertext.gl";
 import { WebGLUniforms } from "./WebGLUniforms";
 const includePattern = /^[ \t]*#include +<([\w\d./]+)>/gm;
 function includeReplacer(match: RegExp, include: string) {
@@ -227,7 +229,11 @@ export class WebGLProgram {
 
     const program = gl.createProgram();
     const prefixVertex = [
-      `precision highp float;
+      `#version 300 es
+    #define attribute in
+    #define varying out
+    #define texture2D texture
+    precision highp float;
     precision highp int;
     precision highp sampler2D;
     precision highp samplerCube;
@@ -258,7 +264,11 @@ export class WebGLProgram {
     ].join("\n");
 
     const prefixFragment = [
-      `precision highp float;
+      `#version 300 es
+    #define varying in
+    layout(location = 0) out highp vec4 pc_fragColor;
+    #define gl_FragColor pc_fragColor
+    precision highp float;
     precision highp int;
     precision highp sampler2D;
     precision highp samplerCube;
@@ -289,7 +299,6 @@ export class WebGLProgram {
 
     const vertexGlsl = prefixVertex + vertexShader;
     const fragmentGlsl = prefixFragment + fragmentShader;
-
     const glVertexShader = createWebGLShader(
       this.gl,
       this.gl.VERTEX_SHADER,

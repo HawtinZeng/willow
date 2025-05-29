@@ -1,3 +1,6 @@
 export class Attribute {
-  constructor(public array: ArrayBuffer, public itemSize: number) {}
+  count: number;
+  constructor(public array: Float32Array, public itemSize: number) {
+    this.count = array.length / itemSize;
+  }
 }

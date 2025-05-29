@@ -3,7 +3,7 @@ import { Matrix3 } from "../math/Matrix3.js";
 import { Color } from "../math/Color.js";
 
 // Uniforms library for shared webgl shaders
-const UniformsLib = {
+export const UniformsLib = {
   common: {
     diffuse: { value: /*@__PURE__*/ new Color(0xffffff) },
     opacity: { value: 1.0 },
@@ -217,5 +217,3 @@ const UniformsLib = {
     alphaTest: { value: 0 },
   },
 };
-
-export { UniformsLib };

@@ -1,3 +1,4 @@
+import { WebGLProgram as WebGLProgram_w } from "./WebGLProgram";
 import { Camera } from "../camera/camera";
 import { Geometry } from "../geometry/Geometry";
 import { Material } from "../materials/Basematerial";
@@ -31,11 +32,12 @@ export class WebGLRenderer {
       return;
     }
     this.gl = context;
-    this.extensions = new (WebGLExtensions(this.gl) as any)();
+    this.extensions = new (WebGLExtensions as any)(this.gl);
     this.extensions.init();
 
-    this.state = new (WebGLState(this.gl, this.extensions) as any)();
-    this.renderState = new (WebGLRenderState(this.extensions) as any)();
+    this.state = new (WebGLState as any)(this.gl, this.extensions);
+    this.renderState = new (WebGLRenderState as any)(this.extensions);
+    this.renderState.init();
   }
 
   render(scene: Scene, camera: Camera) {
@@ -49,10 +51,25 @@ export class WebGLRenderer {
     });
   }
   renderObject(object: Mesh, camera: Camera, scene: Scene) {
+    const gl = this.gl;
     const geo = object.geometry;
     const mat = object.material;
 
     const program = this.getProgram(camera, scene, geo, mat, object);
+
+    const frontFaceCW = true;
+    this.state.setMaterial(mat, frontFaceCW);
+
+    // setup vao
+    const vao = gl.createVertexArray();
+    gl.bindVertexArray(vao); // TODO
+    // setup vertex buffer
+
+    // pass attributes
+
+    // calculate draw start and end position
+    const position = geo.position;
+    gl.drawArrays(gl.TRIANGLES, 0, position.count);
   }
 
   getProgram(
@@ -77,7 +94,7 @@ export class WebGLRenderer {
         mat,
         obj,
         scene,
-        this.renderState.state.lights,
+        this.renderState.state.lights.state,
         this.clipping
       );
       pro = this.createProgram(mat, parameters);
@@ -104,7 +121,6 @@ export class WebGLRenderer {
       numSpotLightMaps: lights.spotLightMap.length,
       numRectAreaLights: lights.rectArea.length,
       numHemiLights: lights.hemi.length,
-
       numDirLightShadows: lights.directionalShadowMap.length,
       numPointLightShadows: lights.pointShadowMap.length,
       numSpotLightShadows: lights.spotShadowMap.length,
@@ -120,5 +136,7 @@ export class WebGLRenderer {
     return `color: ${color}; opacity: ${opacity}`;
   }
 
-  createProgram(material: Material, parameters: any) {}
+  createProgram(material: Material, parameters: any) {
+    return new WebGLProgram_w(material, parameters, this.gl);
+  }
 }

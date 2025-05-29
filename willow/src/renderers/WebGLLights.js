@@ -2,7 +2,7 @@ import { Color } from "../math/Color.js";
 import { Matrix4 } from "../math/Matrix4.js";
 import { Vector2 } from "../math/Vector2.js";
 import { Vector3 } from "../math/Vector3.js";
-import { UniformsLib } from "shaders/UniformsLib.js";
+import { UniformsLib } from "./UniformsLib.js";
 
 function UniformsCache() {
   const lights = {};

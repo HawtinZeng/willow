@@ -4,6 +4,6 @@ export function createCanvasElement(): HTMLCanvasElement {
   return canvas;
 }
 
-function createElementNS(name: string) {
+export function createElementNS(name: string) {
   return document.createElementNS("http://www.w3.org/1999/xhtml", name);
 }

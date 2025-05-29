@@ -1,5 +1,5 @@
-import { ImageUtils } from '../extras/ImageUtils.js';
-import { generateUUID } from '../math/MathUtils.js';
+import { ImageUtils } from "../../extras/ImageUtils.js";
+import { generateUUID } from "../../math/MathUtils.js";
 
 let _sourceId = 0;
 
@@ -10,188 +10,158 @@ let _sourceId = 0;
  * definition so the same data can be used with multiple texture instances.
  */
 class Source {
+  /**
+   * Constructs a new video texture.
+   *
+   * @param {any} [data=null] - The data definition of a texture.
+   */
+  constructor(data = null) {
+    /**
+     * This flag can be used for type testing.
+     *
+     * @type {boolean}
+     * @readonly
+     * @default true
+     */
+    this.isSource = true;
 
-	/**
-	 * Constructs a new video texture.
-	 *
-	 * @param {any} [data=null] - The data definition of a texture.
-	 */
-	constructor( data = null ) {
+    /**
+     * The ID of the source.
+     *
+     * @name Source#id
+     * @type {number}
+     * @readonly
+     */
+    Object.defineProperty(this, "id", { value: _sourceId++ });
 
-		/**
-		 * This flag can be used for type testing.
-		 *
-		 * @type {boolean}
-		 * @readonly
-		 * @default true
-		 */
-		this.isSource = true;
+    /**
+     * The UUID of the source.
+     *
+     * @type {string}
+     * @readonly
+     */
+    this.uuid = generateUUID();
 
-		/**
-		 * The ID of the source.
-		 *
-		 * @name Source#id
-		 * @type {number}
-		 * @readonly
-		 */
-		Object.defineProperty( this, 'id', { value: _sourceId ++ } );
+    /**
+     * The data definition of a texture.
+     *
+     * @type {any}
+     */
+    this.data = data;
 
-		/**
-		 * The UUID of the source.
-		 *
-		 * @type {string}
-		 * @readonly
-		 */
-		this.uuid = generateUUID();
+    /**
+     * This property is only relevant when {@link Source#needsUpdate} is set to `true` and
+     * provides more control on how texture data should be processed. When `dataReady` is set
+     * to `false`, the engine performs the memory allocation (if necessary) but does not transfer
+     * the data into the GPU memory.
+     *
+     * @type {boolean}
+     * @default true
+     */
+    this.dataReady = true;
 
-		/**
-		 * The data definition of a texture.
-		 *
-		 * @type {any}
-		 */
-		this.data = data;
+    /**
+     * This starts at `0` and counts how many times {@link Source#needsUpdate} is set to `true`.
+     *
+     * @type {number}
+     * @readonly
+     * @default 0
+     */
+    this.version = 0;
+  }
 
-		/**
-		 * This property is only relevant when {@link Source#needsUpdate} is set to `true` and
-		 * provides more control on how texture data should be processed. When `dataReady` is set
-		 * to `false`, the engine performs the memory allocation (if necessary) but does not transfer
-		 * the data into the GPU memory.
-		 *
-		 * @type {boolean}
-		 * @default true
-		 */
-		this.dataReady = true;
+  /**
+   * When the property is set to `true`, the engine allocates the memory
+   * for the texture (if necessary) and triggers the actual texture upload
+   * to the GPU next time the source is used.
+   *
+   * @type {boolean}
+   * @default false
+   * @param {boolean} value
+   */
+  set needsUpdate(value) {
+    if (value === true) this.version++;
+  }
 
-		/**
-		 * This starts at `0` and counts how many times {@link Source#needsUpdate} is set to `true`.
-		 *
-		 * @type {number}
-		 * @readonly
-		 * @default 0
-		 */
-		this.version = 0;
+  /**
+   * Serializes the source into JSON.
+   *
+   * @param {?(Object|string)} meta - An optional value holding meta information about the serialization.
+   * @return {Object} A JSON object representing the serialized source.
+   * @see {@link ObjectLoader#parse}
+   */
+  toJSON(meta) {
+    const isRootObject = meta === undefined || typeof meta === "string";
 
-	}
+    if (!isRootObject && meta.images[this.uuid] !== undefined) {
+      return meta.images[this.uuid];
+    }
 
-	/**
-	 * When the property is set to `true`, the engine allocates the memory
-	 * for the texture (if necessary) and triggers the actual texture upload
-	 * to the GPU next time the source is used.
-	 *
-	 * @type {boolean}
-	 * @default false
-	 * @param {boolean} value
-	 */
-	set needsUpdate( value ) {
+    const output = {
+      uuid: this.uuid,
+      url: "",
+    };
 
-		if ( value === true ) this.version ++;
+    const data = this.data;
 
-	}
+    if (data !== null) {
+      let url;
 
-	/**
-	 * Serializes the source into JSON.
-	 *
-	 * @param {?(Object|string)} meta - An optional value holding meta information about the serialization.
-	 * @return {Object} A JSON object representing the serialized source.
-	 * @see {@link ObjectLoader#parse}
-	 */
-	toJSON( meta ) {
+      if (Array.isArray(data)) {
+        // cube texture
 
-		const isRootObject = ( meta === undefined || typeof meta === 'string' );
+        url = [];
 
-		if ( ! isRootObject && meta.images[ this.uuid ] !== undefined ) {
+        for (let i = 0, l = data.length; i < l; i++) {
+          if (data[i].isDataTexture) {
+            url.push(serializeImage(data[i].image));
+          } else {
+            url.push(serializeImage(data[i]));
+          }
+        }
+      } else {
+        // texture
 
-			return meta.images[ this.uuid ];
+        url = serializeImage(data);
+      }
 
-		}
+      output.url = url;
+    }
 
-		const output = {
-			uuid: this.uuid,
-			url: ''
-		};
+    if (!isRootObject) {
+      meta.images[this.uuid] = output;
+    }
 
-		const data = this.data;
-
-		if ( data !== null ) {
-
-			let url;
-
-			if ( Array.isArray( data ) ) {
-
-				// cube texture
-
-				url = [];
-
-				for ( let i = 0, l = data.length; i < l; i ++ ) {
-
-					if ( data[ i ].isDataTexture ) {
-
-						url.push( serializeImage( data[ i ].image ) );
-
-					} else {
-
-						url.push( serializeImage( data[ i ] ) );
-
-					}
-
-				}
-
-			} else {
-
-				// texture
-
-				url = serializeImage( data );
-
-			}
-
-			output.url = url;
-
-		}
-
-		if ( ! isRootObject ) {
-
-			meta.images[ this.uuid ] = output;
-
-		}
-
-		return output;
-
-	}
-
+    return output;
+  }
 }
 
-function serializeImage( image ) {
+function serializeImage(image) {
+  if (
+    (typeof HTMLImageElement !== "undefined" &&
+      image instanceof HTMLImageElement) ||
+    (typeof HTMLCanvasElement !== "undefined" &&
+      image instanceof HTMLCanvasElement) ||
+    (typeof ImageBitmap !== "undefined" && image instanceof ImageBitmap)
+  ) {
+    // default images
 
-	if ( ( typeof HTMLImageElement !== 'undefined' && image instanceof HTMLImageElement ) ||
-		( typeof HTMLCanvasElement !== 'undefined' && image instanceof HTMLCanvasElement ) ||
-		( typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap ) ) {
+    return ImageUtils.getDataURL(image);
+  } else {
+    if (image.data) {
+      // images of DataTexture
 
-		// default images
-
-		return ImageUtils.getDataURL( image );
-
-	} else {
-
-		if ( image.data ) {
-
-			// images of DataTexture
-
-			return {
-				data: Array.from( image.data ),
-				width: image.width,
-				height: image.height,
-				type: image.data.constructor.name
-			};
-
-		} else {
-
-			console.warn( 'THREE.Texture: Unable to serialize Texture.' );
-			return {};
-
-		}
-
-	}
-
+      return {
+        data: Array.from(image.data),
+        width: image.width,
+        height: image.height,
+        type: image.data.constructor.name,
+      };
+    } else {
+      console.warn("THREE.Texture: Unable to serialize Texture.");
+      return {};
+    }
+  }
 }
 
 export { Source };

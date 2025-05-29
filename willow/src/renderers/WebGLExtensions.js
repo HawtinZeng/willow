@@ -1,4 +1,4 @@
-import { warnOnce } from "../utils.js";
+import { warnOnce } from "./utils.js";
 
 function WebGLExtensions(gl) {
   const extensions = {};
