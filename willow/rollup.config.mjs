@@ -18,7 +18,7 @@ function watchAdditional(filePath) {
 export default [
   {
     input: "src/index.ts",
-    output: [{ file: `dist/${pkg.module}`, format: "es" }],
+    output: [{ file: `dist/${pkg.module}`, format: "es", sourcemap: true }],
     plugins: [
       watchAdditional([
         './package.json',

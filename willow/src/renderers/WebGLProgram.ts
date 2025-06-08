@@ -123,8 +123,6 @@ function fetchAttributeLocations(gl: any, program: any) {
     if (info.type === gl.FLOAT_MAT3) locationSize = 3;
     if (info.type === gl.FLOAT_MAT4) locationSize = 4;
 
-    // console.log( 'THREE.WebGLProgram: ACTIVE VERTEX ATTRIBUTE:', name, i );
-
     attributes[name] = {
       type: info.type,
       location: gl.getAttribLocation(program, name),
@@ -321,9 +319,7 @@ export class WebGLProgram {
 
     gl.attachShader(program, glVertexShader);
     gl.attachShader(program, glFragmentShader);
-
     gl.linkProgram(program);
-    this.onFirstUse(shaderName, program, glVertexShader, glFragmentShader);
 
     this.type = parameters.shaderType;
     this.name = parameters.shaderName;
@@ -332,19 +328,18 @@ export class WebGLProgram {
     this.program = program;
     this.vertexShader = glVertexShader;
     this.fragmentShader = glFragmentShader;
+
+    this.onFirstUse();
   }
-  onFirstUse(
-    shaderName: string,
-    program: globalThis.WebGLProgram,
-    glVertexShader: WebGLShader,
-    glFragmentShader: WebGLShader
-  ) {
+  onFirstUse() {
+    const { material, program, vertexShader, fragmentShader } = this;
+    const shaderName = material.type;
     // check for link errors
     if (this.checkShaderErrors) {
       const gl = this.gl;
       const programLog = gl.getProgramInfoLog(program);
-      const vertexLog = gl.getShaderInfoLog(glVertexShader);
-      const fragmentLog = gl.getShaderInfoLog(glFragmentShader);
+      const vertexLog = gl.getShaderInfoLog(vertexShader);
+      const fragmentLog = gl.getShaderInfoLog(fragmentShader);
 
       let runnable = true;
       let haveDiagnostics = true;
@@ -352,12 +347,8 @@ export class WebGLProgram {
       if (gl.getProgramParameter(program, gl.LINK_STATUS) === false) {
         runnable = false;
         // default error reporting
-        const vertexErrors = getShaderErrors(gl, glVertexShader, "vertex");
-        const fragmentErrors = getShaderErrors(
-          gl,
-          glFragmentShader,
-          "fragment"
-        );
+        const vertexErrors = getShaderErrors(gl, vertexShader, "vertex");
+        const fragmentErrors = getShaderErrors(gl, fragmentShader, "fragment");
 
         console.error(
           "THREE.WebGLProgram: Shader Error " +
@@ -398,5 +389,13 @@ export class WebGLProgram {
     // pass data to
     this.cachedUniforms = new WebGLUniforms(this.gl, program);
     this.cachedAttributes = fetchAttributeLocations(this.gl, program);
+  }
+  getAttributes() {
+    if (this.cachedAttributes === undefined) {
+      // Populates cachedAttributes and cachedUniforms
+      this.onFirstUse();
+    }
+
+    return this.cachedAttributes;
   }
 }

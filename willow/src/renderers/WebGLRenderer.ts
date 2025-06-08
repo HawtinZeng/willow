@@ -91,7 +91,6 @@ export class WebGLRenderer {
     });
   }
   renderObject(object: Mesh, camera: Camera, scene: Scene) {
-    const gl = this.gl;
     const geo = object.geometry;
     const mat = object.material;
 
@@ -103,8 +102,12 @@ export class WebGLRenderer {
 
     this.bindingStates.setup(object, mat, program, geo, null);
 
+    const position = geo.attributes.position;
     this.renderer.setMode(this.gl.TRIANGLES);
-    this.renderer.render(object);
+    const { drawRange } = geo;
+    const start = Math.max(0, drawRange.start);
+    const count = Math.min(position.count, drawRange.end - start);
+    this.renderer.render(start, count);
   }
 
   getProgram(
