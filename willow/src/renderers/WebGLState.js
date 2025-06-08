@@ -420,7 +420,6 @@ function WebGLState(gl, extensions) {
   );
 
   // init
-
   colorBuffer.setClear(0, 0, 0, 1);
   depthBuffer.setClear(1);
   stencilBuffer.setClear(0);

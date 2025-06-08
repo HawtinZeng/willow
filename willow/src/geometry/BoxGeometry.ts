@@ -86,7 +86,7 @@ export class BoxGeometry extends Geometry {
       5
     ); // nz
     vertices.push(...[...px, ...nx, ...py, ...ny, ...pz, ...nz]);
-    this.position = new Float32BufferAttribute(vertices, 3);
+    this.setAttribute("position", new Float32BufferAttribute(vertices, 3));
   }
 
   getPlaneVertices(

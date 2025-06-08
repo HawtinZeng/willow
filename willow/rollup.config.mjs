@@ -10,7 +10,6 @@ function watchAdditional(filePath) {
       name: 'watchAdditionalitional',
       buildStart() {
           filePath.forEach(p => {
-            console.log(path.resolve(dirname('.'), p))
             this.addWatchFile(path.resolve(dirname('.'), p))
           })
       },

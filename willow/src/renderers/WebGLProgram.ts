@@ -9,6 +9,7 @@ import { ShaderChunk } from "./shaders/ShaderChunk";
 import { vertexExample } from "./vertext.gl";
 import { WebGLUniforms } from "./WebGLUniforms";
 const includePattern = /^[ \t]*#include +<([\w\d./]+)>/gm;
+let programIdCount = 0;
 function includeReplacer(match: RegExp, include: string) {
   let string = (ShaderChunk as any)[include];
 
@@ -208,11 +209,19 @@ export class WebGLProgram {
   diagnostics: any = {};
   cachedUniforms: any;
   cachedAttributes: any;
+  type: any;
+  name: any;
+  id: number;
+  usedTimes: number;
+  program: globalThis.WebGLProgram;
+  vertexShader: WebGLShader;
+  fragmentShader: WebGLShader;
 
   constructor(
     public material: Material,
     public parameters: any,
-    public gl: WebGLRenderingContext
+    public gl: WebGLRenderingContext,
+    public cacheKey: string
   ) {
     const shaderName = material.type;
     let vertexShader = ShaderLib[material.type].vertex;
@@ -315,6 +324,14 @@ export class WebGLProgram {
 
     gl.linkProgram(program);
     this.onFirstUse(shaderName, program, glVertexShader, glFragmentShader);
+
+    this.type = parameters.shaderType;
+    this.name = parameters.shaderName;
+    this.id = programIdCount++;
+    this.usedTimes = 1;
+    this.program = program;
+    this.vertexShader = glVertexShader;
+    this.fragmentShader = glFragmentShader;
   }
   onFirstUse(
     shaderName: string,

@@ -1,5 +1,6 @@
 import { generateUUID } from "../math/MathUtils";
 import { MaterialType } from "../renderers/ShaderLib";
+import { NoBlending } from "../constants";
 
 let _materialId = 0;
 export class Material {
@@ -9,6 +10,9 @@ export class Material {
   id: number;
   uuid: string;
   type!: MaterialType;
+  blending: number = NoBlending;
+  aoMap: any;
+  vertexColors: any;
 
   constructor(public color: string = "#ff0000") {
     this.userData = {};

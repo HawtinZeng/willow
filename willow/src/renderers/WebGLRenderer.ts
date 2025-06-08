@@ -10,6 +10,12 @@ import { WebGLClipping } from "./WebGLClipping";
 import { WebGLExtensions } from "./WebGLExtensions";
 import { WebGLState } from "./WebGLState";
 import { WebGLRenderState } from "./WebGLRenderStates";
+import { WebGLAttributes } from "./WebGLAttributes";
+import { WebGLGeometries } from "./WebGLGeometries";
+import { WebGLInfo } from "./WebGLInfo";
+import { WebGLObjects } from "./WebGLObjects";
+import { WebGLBindingStates } from "./WebGLBindingStates";
+import { WebGLBufferRenderer } from "./WebGLBufferRenderer";
 
 export class WebGLRenderer {
   private currentState: any;
@@ -17,10 +23,27 @@ export class WebGLRenderer {
   private gl!: WebGL2RenderingContext;
   private static properties: WebGLProperties = new WebGLProperties();
   private clipping: WebGLClipping = new WebGLClipping();
-  extensions: any;
-  state: any;
-  renderState: any;
+  // @ts-ignore
+  extensions: ReturnType<typeof WebGLExtensions>;
+  // @ts-ignore
+  state: ReturnType<typeof WebGLState>;
+  // @ts-ignore
+  renderState: ReturnType<typeof WebGLRenderState>;
+  // @ts-ignore
   diagnostics: any;
+  // @ts-ignore
+  attributes: ReturnType<typeof WebGLAttributes>;
+  // @ts-ignore
+  info: ReturnType<typeof WebGLInfo>;
+  // @ts-ignore
+  geometries: ReturnType<typeof WebGLGeometries>;
+  // @ts-ignore
+  objects: ReturnType<typeof WebGLObjects>;
+  // @ts-ignore
+  bindingStates: ReturnType<typeof WebGLBindingStates>;
+
+  // @ts-ignore
+  renderer: ReturnType<typeof WebGLBufferRenderer>;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -32,12 +55,29 @@ export class WebGLRenderer {
       return;
     }
     this.gl = context;
-    this.extensions = new (WebGLExtensions as any)(this.gl);
+    this.extensions = (WebGLExtensions as any)(this.gl);
     this.extensions.init();
-
-    this.state = new (WebGLState as any)(this.gl, this.extensions);
-    this.renderState = new (WebGLRenderState as any)(this.extensions);
+    this.state = (WebGLState as any)(this.gl, this.extensions);
+    this.renderState = (WebGLRenderState as any)(this.extensions);
     this.renderState.init();
+    this.attributes = WebGLAttributes(this.gl);
+    this.bindingStates = WebGLBindingStates(this.gl, this.attributes);
+
+    this.info = WebGLInfo(this.gl);
+    this.geometries = WebGLGeometries(
+      this.gl,
+      this.attributes,
+      this.info,
+      this.bindingStates
+    );
+    this.objects = WebGLObjects(
+      this.gl,
+      this.geometries,
+      this.attributes,
+      this.info
+    );
+
+    this.renderer = WebGLBufferRenderer(this.gl, this.extensions, this.info);
   }
 
   render(scene: Scene, camera: Camera) {
@@ -56,20 +96,15 @@ export class WebGLRenderer {
     const mat = object.material;
 
     const program = this.getProgram(camera, scene, geo, mat, object);
+    this.state.useProgram(program.program);
 
     const frontFaceCW = true;
     this.state.setMaterial(mat, frontFaceCW);
 
-    // setup vao
-    const vao = gl.createVertexArray();
-    gl.bindVertexArray(vao); // TODO
-    // setup vertex buffer
+    this.bindingStates.setup(object, mat, program, geo, null);
 
-    // pass attributes
-
-    // calculate draw start and end position
-    const position = geo.position;
-    gl.drawArrays(gl.TRIANGLES, 0, position.count);
+    this.renderer.setMode(this.gl.TRIANGLES);
+    this.renderer.render(object);
   }
 
   getProgram(
@@ -97,7 +132,7 @@ export class WebGLRenderer {
         this.renderState.state.lights.state,
         this.clipping
       );
-      pro = this.createProgram(mat, parameters);
+      pro = this.createProgram(mat, parameters, programCacheKey);
       programs.set(programCacheKey, pro);
     }
     return pro;
@@ -133,10 +168,10 @@ export class WebGLRenderer {
   getProgramCacheKey(material: Material) {
     const color = material.color;
     const opacity = material.opacity;
-    return `color: ${color}; opacity: ${opacity}`;
+    return `color: ${color}; opacity: ${opacity}; MaterialType: ${material.type}`;
   }
 
-  createProgram(material: Material, parameters: any) {
-    return new WebGLProgram_w(material, parameters, this.gl);
+  createProgram(material: Material, parameters: any, programCacheKey: string) {
+    return new WebGLProgram_w(material, parameters, this.gl, programCacheKey);
   }
 }
