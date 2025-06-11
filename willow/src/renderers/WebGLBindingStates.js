@@ -256,9 +256,6 @@ function WebGLBindingStates(gl, attributes) {
     for (const name in programAttributes) {
       const programAttribute = programAttributes[name];
 
-      console.log("programAttribute.locationSize");
-      console.log(programAttribute.locationSize);
-
       if (programAttribute.location >= 0) {
         let geometryAttribute = geometryAttributes[name];
 

@@ -55,7 +55,6 @@ function WebGLGeometries(gl, attributes, info, bindingStates) {
 
   function update(geometry) {
     const geometryAttributes = geometry.attributes;
-
     // Updating index buffer in VAO now. See WebGLBindingStates.
 
     for (const name in geometryAttributes) {

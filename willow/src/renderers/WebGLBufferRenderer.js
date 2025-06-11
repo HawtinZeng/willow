@@ -11,6 +11,10 @@ function WebGLBufferRenderer(gl, extensions, info) {
     info.update(count, mode, 1);
   }
 
+  function renderIndex(count, start, type, bytesPerElement) {
+    gl.drawElements(mode, count, type, start * bytesPerElement);
+  }
+
   function renderInstances(start, count, primcount) {
     if (primcount === 0) return;
 
@@ -66,6 +70,7 @@ function WebGLBufferRenderer(gl, extensions, info) {
   return {
     setMode,
     render,
+    renderIndex,
     renderInstances,
     renderMultiDraw,
     renderMultiDrawInstances,

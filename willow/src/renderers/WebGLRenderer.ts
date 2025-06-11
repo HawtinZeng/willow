@@ -99,15 +99,25 @@ export class WebGLRenderer {
 
     const frontFaceCW = true;
     this.state.setMaterial(mat, frontFaceCW);
+    this.bindingStates.setup(object, mat, program, geo, geo.index);
 
-    this.bindingStates.setup(object, mat, program, geo, null);
-
-    const position = geo.attributes.position;
     this.renderer.setMode(this.gl.TRIANGLES);
     const { drawRange } = geo;
-    const start = Math.max(0, drawRange.start);
-    const count = Math.min(position.count, drawRange.end - start);
-    this.renderer.render(start, count);
+    let drawStart = drawRange.start;
+    let drawEnd = drawRange.start + drawRange.count;
+    if (geo.index) {
+      drawStart = Math.max(drawStart, 0);
+      drawEnd = Math.min(drawEnd, geo.index.count);
+
+      const indexBufferInfo = this.attributes.get(geo.index);
+      this.renderer.renderIndex(
+        drawEnd - drawStart,
+        drawStart,
+        indexBufferInfo.type,
+        indexBufferInfo.bytesPerElement
+      );
+      // console.log(this.attributes.get(geo.attributes.position));
+    }
   }
 
   getProgram(

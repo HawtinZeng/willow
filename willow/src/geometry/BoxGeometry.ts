@@ -3,9 +3,10 @@ import { Float32BufferAttribute } from "./float32Attribute";
 import { Geometry } from "./Geometry";
 
 export class BoxGeometry extends Geometry {
+  numberOfVertices: number = 0;
+  indices: number[] = [];
   constructor(width: number, height: number, depth: number) {
     super();
-
     const vertices: number[] = [];
     const px = this.getPlaneVertices(
       "z",
@@ -86,6 +87,8 @@ export class BoxGeometry extends Geometry {
       5
     ); // nz
     vertices.push(...[...px, ...nx, ...py, ...ny, ...pz, ...nz]);
+
+    this.setIndex(this.indices);
     this.setAttribute("position", new Float32BufferAttribute(vertices, 3));
   }
 
@@ -133,6 +136,28 @@ export class BoxGeometry extends Geometry {
         vertexCounter += 1;
       }
     }
+
+    for (let iy = 0; iy < gridY; iy++) {
+      for (let ix = 0; ix < gridX; ix++) {
+        const a = this.numberOfVertices + ix + gridX1 * iy;
+        const b = this.numberOfVertices + ix + gridX1 * (iy + 1);
+        const c = this.numberOfVertices + (ix + 1) + gridX1 * (iy + 1);
+        const d = this.numberOfVertices + (ix + 1) + gridX1 * iy;
+
+        // faces
+
+        this.indices.push(a, b, d);
+        this.indices.push(b, c, d);
+
+        // increase counter
+
+        groupCount += 6;
+      }
+    }
+
+    this.addGroup(this.groupStart, groupCount, materialIndex);
+    this.groupStart += groupCount;
+
     return vertices;
   }
 }
