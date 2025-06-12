@@ -4,14 +4,14 @@ import {
   Uint32BufferAttribute,
 } from "../core/BufferAttribute";
 import { arrayNeedsUint32 } from "../renderers/utils";
-import { Attribute } from "./Attribute";
-export class Geometry {
+import { EventDispatcher } from "../tool/EventDispatcher";
+export class Geometry extends EventDispatcher {
   attributes: any = {};
   drawRange: { start: number; count: number } = { start: 0, count: Infinity };
   groups: { start: number; count: number; materialIndex: number }[] = [];
   groupStart: number = 0;
   index!: BufferAttribute;
-  setAttribute(name: string, attribute: Attribute) {
+  setAttribute(name: string, attribute: BufferAttribute) {
     this.attributes[name] = attribute;
   }
   getAttribute(name: string) {

@@ -398,4 +398,12 @@ export class WebGLProgram {
 
     return this.cachedAttributes;
   }
+
+  getUniforms() {
+    if (this.cachedUniforms === undefined) {
+      this.onFirstUse();
+    }
+
+    return this.cachedUniforms;
+  }
 }

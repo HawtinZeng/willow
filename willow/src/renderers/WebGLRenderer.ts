@@ -83,6 +83,7 @@ export class WebGLRenderer {
   render(scene: Scene, camera: Camera) {
     // get all objects.
     // for each object, bind buffer and drawArray
+
     this.renderObjects(scene, camera);
   }
   renderObjects(scene: Scene, camera: Camera) {
@@ -94,12 +95,20 @@ export class WebGLRenderer {
     const geo = object.geometry;
     const mat = object.material;
 
+    object.modelViewMatrix.multiplyMatrices(
+      camera.matrixWorldInverse,
+      object.matrixWorld
+    );
+
     const program = this.getProgram(camera, scene, geo, mat, object);
+
     this.state.useProgram(program.program);
 
     const frontFaceCW = true;
     this.state.setMaterial(mat, frontFaceCW);
     this.bindingStates.setup(object, mat, program, geo, geo.index);
+
+    this.objects.update(object);
 
     this.renderer.setMode(this.gl.TRIANGLES);
     const { drawRange } = geo;
@@ -108,7 +117,6 @@ export class WebGLRenderer {
     if (geo.index) {
       drawStart = Math.max(drawStart, 0);
       drawEnd = Math.min(drawEnd, geo.index.count);
-
       const indexBufferInfo = this.attributes.get(geo.index);
       this.renderer.renderIndex(
         drawEnd - drawStart,
@@ -116,7 +124,6 @@ export class WebGLRenderer {
         indexBufferInfo.type,
         indexBufferInfo.bytesPerElement
       );
-      // console.log(this.attributes.get(geo.attributes.position));
     }
   }
 
@@ -136,7 +143,7 @@ export class WebGLRenderer {
       materialPros.programs = programs;
     }
 
-    let pro = programs.get(programCacheKey);
+    let pro = programs.get(programCacheKey) as WebGLProgram_w;
     if (!pro) {
       const parameters = this.getParameters(
         mat,
@@ -148,6 +155,9 @@ export class WebGLRenderer {
       pro = this.createProgram(mat, parameters, programCacheKey);
       programs.set(programCacheKey, pro);
     }
+
+    const uniforms = pro.getUniforms();
+
     return pro;
   }
 

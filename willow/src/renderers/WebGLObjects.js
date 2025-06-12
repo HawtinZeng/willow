@@ -6,7 +6,6 @@ function WebGLObjects(gl, geometries, attributes, info) {
     const geometry = object.geometry;
 
     const buffergeometry = geometries.get(object, geometry);
-
     // Update once per frame
 
     if (updateMap.get(buffergeometry) !== frame) {
