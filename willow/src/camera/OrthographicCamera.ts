@@ -1,6 +1,7 @@
 import { Camera } from "./camera";
 
 export class OrthographicCamera extends Camera {
+  isOrthographicCamera = true;
   constructor(
     public left: number = -1,
     public right: number = 1,

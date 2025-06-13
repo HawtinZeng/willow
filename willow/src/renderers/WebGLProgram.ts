@@ -201,7 +201,6 @@ function getShaderErrors(gl: any, shader: any, type: any) {
     return errors;
   }
 }
-
 export class WebGLProgram {
   checkShaderErrors: boolean = true;
   diagnostics: any = {};
@@ -214,6 +213,8 @@ export class WebGLProgram {
   program: globalThis.WebGLProgram;
   vertexShader: WebGLShader;
   fragmentShader: WebGLShader;
+  vertexGlsl: string;
+  fragmentGlsl: string;
 
   constructor(
     public material: Material,
@@ -306,6 +307,9 @@ export class WebGLProgram {
 
     const vertexGlsl = prefixVertex + vertexShader;
     const fragmentGlsl = prefixFragment + fragmentShader;
+    this.vertexGlsl = vertexGlsl;
+    this.fragmentGlsl = fragmentGlsl;
+
     const glVertexShader = createWebGLShader(
       this.gl,
       this.gl.VERTEX_SHADER,

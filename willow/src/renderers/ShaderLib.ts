@@ -61,7 +61,6 @@ void main() {
 	#include <envmap_vertex>
 	#include <shadowmap_vertex>
 	#include <fog_vertex>
-
 }
 `,
     fragment: `

@@ -3,7 +3,6 @@ import { Camera } from "../camera/camera";
 import { Geometry } from "../geometry/Geometry";
 import { Material } from "../materials/Basematerial";
 import { Mesh } from "../objects/mesh";
-import { Object3D } from "../objects/object3D";
 import { Scene } from "../scene/scene";
 import { WebGLProperties } from "./WebGLProperties";
 import { WebGLClipping } from "./WebGLClipping";
@@ -16,6 +15,10 @@ import { WebGLInfo } from "./WebGLInfo";
 import { WebGLObjects } from "./WebGLObjects";
 import { WebGLBindingStates } from "./WebGLBindingStates";
 import { WebGLBufferRenderer } from "./WebGLBufferRenderer";
+import { Object3D } from "../objects/Object3D";
+import { ShaderLib } from "./ShaderLib";
+import { UniformsUtils } from "./UniformsUtils";
+import { WebGLUniforms } from "./WebGLUniforms";
 
 export class WebGLRenderer {
   private currentState: any;
@@ -23,6 +26,7 @@ export class WebGLRenderer {
   private gl!: WebGL2RenderingContext;
   private static properties: WebGLProperties = new WebGLProperties();
   private clipping: WebGLClipping = new WebGLClipping();
+  toneMappingExposure: number = 1.0;
   // @ts-ignore
   extensions: ReturnType<typeof WebGLExtensions>;
   // @ts-ignore
@@ -127,6 +131,20 @@ export class WebGLRenderer {
     }
   }
 
+  getUniformList(materialProperties: any) {
+    if (materialProperties.uniformsList === null) {
+      const progUniforms = (
+        this.state.currentProgram as any as WebGLProgram_w
+      ).getUniforms();
+      materialProperties.uniformsList = WebGLUniforms.seqWithValue(
+        progUniforms.seq,
+        materialProperties.uniforms
+      );
+    }
+
+    return materialProperties.uniformsList;
+  }
+
   getProgram(
     ca: Camera,
     scene: Scene,
@@ -143,6 +161,16 @@ export class WebGLRenderer {
       materialPros.programs = programs;
     }
 
+    const shader = ShaderLib[mat.type];
+    const m_uniforms = UniformsUtils.clone(shader.uniforms);
+
+    WebGLUniforms.upload(
+      this.gl,
+      this.getUniformList(materialPros),
+      m_uniforms
+      // textures, TODO
+    );
+
     let pro = programs.get(programCacheKey) as WebGLProgram_w;
     if (!pro) {
       const parameters = this.getParameters(
@@ -155,8 +183,22 @@ export class WebGLRenderer {
       pro = this.createProgram(mat, parameters, programCacheKey);
       programs.set(programCacheKey, pro);
     }
+    const p_uniforms = pro.getUniforms();
 
-    const uniforms = pro.getUniforms();
+    p_uniforms.setValue(this.gl, "projectionMatrix", ca.projectionMatrix);
+    p_uniforms.setValue(this.gl, "viewMatrix", ca.matrixWorldInverse);
+    p_uniforms.setValue(this.gl, "cameraPosition", ca.matrixWorld);
+    p_uniforms.setValue(this.gl, "isOrthographic", ca.isOrthographicCamera);
+    p_uniforms.setValue(
+      this.gl,
+      "toneMappingExposure",
+      this.toneMappingExposure
+    );
+
+    // FOR DEBUG
+    // console.log(uniforms);
+    // console.log(pro.vertexGlsl);
+    // console.log(pro.fragmentGlsl);
 
     return pro;
   }
