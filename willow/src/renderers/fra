@@ -23,7 +23,7 @@
 uniform mat4 viewMatrix;
 uniform vec3 cameraPosition;
 uniform bool isOrthographic;
-
+varing vec3 pos
 
 vec4 LinearTransferOETF( in vec4 value ) {
 	return value;
@@ -1334,6 +1334,8 @@ void RE_IndirectDiffuse_Lambert( const in vec3 irradiance, const in vec3 geometr
 void main() {
 
 	vec4 diffuseColor = vec4( diffuse, opacity );
+
+	gl_FragColor = vec4(pos, 1.0);
 
 #if 0 > 0
 

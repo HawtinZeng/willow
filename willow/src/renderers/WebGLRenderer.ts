@@ -19,6 +19,7 @@ import { Object3D } from "../objects/Object3D";
 import { ShaderLib } from "./ShaderLib";
 import { UniformsUtils } from "./UniformsUtils";
 import { WebGLUniforms } from "./WebGLUniforms";
+import { WebGLMaterials } from "./WebGLMaterials";
 
 export class WebGLRenderer {
   private currentState: any;
@@ -48,6 +49,9 @@ export class WebGLRenderer {
 
   // @ts-ignore
   renderer: ReturnType<typeof WebGLBufferRenderer>;
+
+  // @ts-ignore
+  materials: ReturnType<typeof WebGLMaterials>;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -81,6 +85,7 @@ export class WebGLRenderer {
       this.info
     );
 
+    this.materials = WebGLMaterials(this, WebGLRenderer.properties);
     this.renderer = WebGLBufferRenderer(this.gl, this.extensions, this.info);
   }
 
@@ -95,6 +100,29 @@ export class WebGLRenderer {
       this.renderObject(item, camera, scene);
     });
   }
+  prepareUnifroms(mat: Material, ca: Camera) {
+    const materialPros = WebGLRenderer.properties.get(mat);
+    WebGLUniforms.upload(
+      this.gl,
+      this.getUniformList(materialPros),
+      materialPros.uniforms
+      // textures, TODO
+    );
+
+    const p_uniforms = (
+      this.state.currentProgram as any as WebGLProgram_w
+    ).getUniforms();
+
+    p_uniforms.setValue(this.gl, "projectionMatrix", ca.projectionMatrix);
+    p_uniforms.setValue(this.gl, "viewMatrix", ca.matrixWorldInverse);
+    p_uniforms.setValue(this.gl, "cameraPosition", ca.matrixWorld);
+    p_uniforms.setValue(this.gl, "isOrthographic", ca.isOrthographicCamera);
+    p_uniforms.setValue(
+      this.gl,
+      "toneMappingExposure",
+      this.toneMappingExposure
+    );
+  }
   renderObject(object: Mesh, camera: Camera, scene: Scene) {
     const geo = object.geometry;
     const mat = object.material;
@@ -104,9 +132,10 @@ export class WebGLRenderer {
       object.matrixWorld
     );
 
-    const program = this.getProgram(camera, scene, geo, mat, object);
+    const program = this.getProgram(scene, geo, mat, object);
 
-    this.state.useProgram(program.program);
+    this.state.useProgram(program);
+    this.prepareUnifroms(mat, camera);
 
     const frontFaceCW = true;
     this.state.setMaterial(mat, frontFaceCW);
@@ -132,7 +161,7 @@ export class WebGLRenderer {
   }
 
   getUniformList(materialProperties: any) {
-    if (materialProperties.uniformsList === null) {
+    if (materialProperties.uniformsList === undefined) {
       const progUniforms = (
         this.state.currentProgram as any as WebGLProgram_w
       ).getUniforms();
@@ -145,13 +174,7 @@ export class WebGLRenderer {
     return materialProperties.uniformsList;
   }
 
-  getProgram(
-    ca: Camera,
-    scene: Scene,
-    geo: Geometry,
-    mat: Material,
-    obj: Object3D
-  ) {
+  getProgram(scene: Scene, geo: Geometry, mat: Material, obj: Object3D) {
     const programCacheKey = this.getProgramCacheKey(mat);
 
     const materialPros = WebGLRenderer.properties.get(mat);
@@ -160,16 +183,6 @@ export class WebGLRenderer {
       programs = new Map();
       materialPros.programs = programs;
     }
-
-    const shader = ShaderLib[mat.type];
-    const m_uniforms = UniformsUtils.clone(shader.uniforms);
-
-    WebGLUniforms.upload(
-      this.gl,
-      this.getUniformList(materialPros),
-      m_uniforms
-      // textures, TODO
-    );
 
     let pro = programs.get(programCacheKey) as WebGLProgram_w;
     if (!pro) {
@@ -182,23 +195,18 @@ export class WebGLRenderer {
       );
       pro = this.createProgram(mat, parameters, programCacheKey);
       programs.set(programCacheKey, pro);
-    }
-    const p_uniforms = pro.getUniforms();
 
-    p_uniforms.setValue(this.gl, "projectionMatrix", ca.projectionMatrix);
-    p_uniforms.setValue(this.gl, "viewMatrix", ca.matrixWorldInverse);
-    p_uniforms.setValue(this.gl, "cameraPosition", ca.matrixWorld);
-    p_uniforms.setValue(this.gl, "isOrthographic", ca.isOrthographicCamera);
-    p_uniforms.setValue(
-      this.gl,
-      "toneMappingExposure",
-      this.toneMappingExposure
-    );
+      const shader = ShaderLib[mat.type];
+      const t_uniforms = UniformsUtils.clone(shader.uniforms);
+      this.materials.refreshMaterialUniforms(t_uniforms, mat); // from mat to uniforms
+
+      materialPros.uniforms = t_uniforms;
+    }
 
     // FOR DEBUG
     // console.log(uniforms);
-    // console.log(pro.vertexGlsl);
-    // console.log(pro.fragmentGlsl);
+    console.log(pro.vertexGlsl);
+    console.log(pro.fragmentGlsl);
 
     return pro;
   }

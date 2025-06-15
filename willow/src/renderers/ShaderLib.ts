@@ -32,7 +32,9 @@ varying vec3 vViewPosition;
 #include <logdepthbuf_pars_vertex>
 #include <clipping_planes_pars_vertex>
 
+varying vec3 pos
 void main() {
+	pos = vec3(position)
 
 	#include <uv_vertex>
 	#include <color_vertex>
@@ -46,7 +48,6 @@ void main() {
 	#include <skinnormal_vertex>
 	#include <defaultnormal_vertex>
 	#include <normal_vertex>
-
 	#include <begin_vertex>
 	#include <morphtarget_vertex>
 	#include <skinning_vertex>
@@ -134,6 +135,7 @@ void main() {
 	#include <premultiplied_alpha_fragment>
 	#include <dithering_fragment>
 
+	pc_fragColor = vec4(pos, 1.0);
 }
 `,
     uniforms: mergeUniforms([

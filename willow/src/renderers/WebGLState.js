@@ -41,6 +41,7 @@ import {
 } from "../constants.js";
 import { Color } from "../math/Color.js";
 import { Vector4 } from "../math/Vector4.js";
+import { WebGLProgram } from "./WebGLProgram.js";
 
 const reversedFuncs = {
   [NeverDepth]: AlwaysDepth,
@@ -513,7 +514,7 @@ function WebGLState(gl, extensions) {
 
   function useProgram(program) {
     if (currentProgram !== program) {
-      gl.useProgram(program);
+      gl.useProgram(program.program);
 
       currentProgram = program;
 
@@ -1175,7 +1176,9 @@ function WebGLState(gl, extensions) {
     viewport: viewport,
 
     reset: reset,
-    currentProgram: currentProgram,
+    get currentProgram() {
+      return currentProgram;
+    },
   };
 }
 
