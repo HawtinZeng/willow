@@ -193,6 +193,7 @@ function WebGLBindingStates(gl, attributes) {
     }
   }
 
+  // TODO 2025.6.18
   function enableAttribute(attribute) {
     enableAttributeAndDivisor(attribute, 0);
   }

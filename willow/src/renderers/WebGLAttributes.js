@@ -138,7 +138,6 @@ function WebGLAttributes(gl) {
 
   function update(attribute, bufferType) {
     if (attribute.isInterleavedBufferAttribute) attribute = attribute.data;
-
     if (attribute.isGLBufferAttribute) {
       const cached = buffers.get(attribute);
 

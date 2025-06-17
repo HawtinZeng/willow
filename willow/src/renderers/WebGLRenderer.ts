@@ -20,6 +20,12 @@ import { ShaderLib } from "./ShaderLib";
 import { UniformsUtils } from "./UniformsUtils";
 import { WebGLUniforms } from "./WebGLUniforms";
 import { WebGLMaterials } from "./WebGLMaterials";
+import {
+  Float32BufferAttribute,
+  Uint16BufferAttribute,
+  Uint32BufferAttribute,
+} from "../core/BufferAttribute";
+import { arrayNeedsUint32 } from "./utils";
 
 export class WebGLRenderer {
   private currentState: any;
@@ -135,19 +141,32 @@ export class WebGLRenderer {
     const program = this.getProgram(scene, geo, mat, object);
 
     this.state.useProgram(program);
+    // this.prepareUnifroms(mat, camera);
+
+    // const frontFaceCW = false;
+    // this.state.setMaterial(mat, frontFaceCW);
 
     const context = this.gl;
-    const positions = new Float32Array([
-      -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
-    ]);
-    const positionBuffer = context.createBuffer();
-    context.bindBuffer(context.ARRAY_BUFFER, positionBuffer);
-    context.bufferData(context.ARRAY_BUFFER, positions, context.STATIC_DRAW);
+    object.geometry.attributes.position = new Float32BufferAttribute(
+      [-1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0],
+      2
+    );
+    object.geometry.index = new (
+      arrayNeedsUint32([0, 1, 2, 0, 2, 3])
+        ? Uint32BufferAttribute
+        : Uint16BufferAttribute
+    )([0, 1, 2, 0, 2, 3], 1);
+
+    this.bindingStates.setup(object, mat, program, geo, geo.index);
+    this.objects.update(object);
 
     const positionLocation = context.getAttribLocation(
       program.program,
-      "aPosition"
+      "position"
     );
+
+    // TODO enable vertext attribArray
+
     context.enableVertexAttribArray(positionLocation);
     context.vertexAttribPointer(
       positionLocation,
@@ -158,29 +177,7 @@ export class WebGLRenderer {
       0
     );
 
-    const indicies = new Uint16Array([0, 1, 2, 0, 2, 3]);
-    const indexBuffer = context.createBuffer();
-    context.bindBuffer(context.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    context.bufferData(
-      context.ELEMENT_ARRAY_BUFFER,
-      indicies,
-      context.STATIC_DRAW
-    );
-
-    createFramebuffer(context, 10, 10);
     context.drawElements(context.TRIANGLES, 6, context.UNSIGNED_SHORT, 0);
-
-    this.readFromContext();
-    // context.drawElements(context.TRIANGLES, 6, context.UNSIGNED_SHORT, 0);
-    //   // for debug...
-
-    // this.prepareUnifroms(mat, camera);
-
-    // const frontFaceCW = true;
-    // this.state.setMaterial(mat, frontFaceCW);
-    // this.bindingStates.setup(object, mat, program, geo, geo.index);
-
-    // this.objects.update(object);
 
     // this.renderer.setMode(this.gl.TRIANGLES);
     // const { drawRange } = geo;
@@ -189,15 +186,17 @@ export class WebGLRenderer {
     // if (geo.index) {
     //   drawStart = Math.max(drawStart, 0);
     //   drawEnd = Math.min(drawEnd, geo.index.count);
-    //   const indexBufferInfo = this.attributes.get(geo.index);
-    //   const context = this.gl;
 
-    //   this.renderer.renderIndex(
-    //     drawEnd - drawStart,
-    //     drawStart,
-    //     indexBufferInfo.type,
-    //     indexBufferInfo.bytesPerElement
-    //   );
+    // createFramebuffer(this.gl, 10, 10);
+    // this.renderer.renderIndex(
+    //   drawEnd - drawStart,
+    //   drawStart,
+    //   indexBufferInfo.type,
+    //   indexBufferInfo.bytesPerElement
+    // );
+
+    // for debug...
+    // this.readFromContext();
     // }
   }
 
@@ -293,7 +292,7 @@ export class WebGLRenderer {
     const context = this.gl;
     const result = new Float32Array(400);
     context.readPixels(0, 0, 10, 10, context.RGBA, context.FLOAT, result);
-    console.log(result);
+    // console.log(result);
   }
 }
 

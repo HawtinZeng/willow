@@ -224,16 +224,16 @@ export class WebGLProgram {
   ) {
     const shaderName = material.type;
     let vertexShader = ShaderLib[material.type].vertex;
-    // vertexShader = resolveIncludes(vertexShader);
-    // vertexShader = replaceLightNums(vertexShader, parameters);
-    // vertexShader = replaceClippingPlaneNums(vertexShader, parameters);
-    // vertexShader = unrollLoops(vertexShader);
+    vertexShader = resolveIncludes(vertexShader);
+    vertexShader = replaceLightNums(vertexShader, parameters);
+    vertexShader = replaceClippingPlaneNums(vertexShader, parameters);
+    vertexShader = unrollLoops(vertexShader);
 
     let fragmentShader = ShaderLib[material.type].fragment;
-    // fragmentShader = resolveIncludes(fragmentShader);
-    // fragmentShader = replaceLightNums(fragmentShader, parameters);
-    // fragmentShader = replaceClippingPlaneNums(fragmentShader, parameters);
-    // fragmentShader = unrollLoops(fragmentShader);
+    fragmentShader = resolveIncludes(fragmentShader);
+    fragmentShader = replaceLightNums(fragmentShader, parameters);
+    fragmentShader = replaceClippingPlaneNums(fragmentShader, parameters);
+    fragmentShader = unrollLoops(fragmentShader);
 
     const program = gl.createProgram();
     const prefixVertex = [
@@ -307,18 +307,33 @@ export class WebGLProgram {
 
     const vertexGlsl = prefixVertex + vertexShader;
     const fragmentGlsl = prefixFragment + fragmentShader;
-    this.vertexGlsl = vertexShader;
-    this.fragmentGlsl = fragmentShader;
+    this.vertexGlsl = vertexGlsl;
+    this.fragmentGlsl = fragmentGlsl;
 
     const glVertexShader = createWebGLShader(
       this.gl,
       this.gl.VERTEX_SHADER,
-      vertexShader
+      `#version 300 es
+		precision highp float;
+		in vec3 position;
+
+		void main(){
+			gl_Position = vec4(position, 1.0);
+		}
+	`
     );
     const glFragmentShader = createWebGLShader(
       this.gl,
       this.gl.FRAGMENT_SHADER,
-      fragmentShader
+      `#version 300 es
+		precision highp float;
+
+		out vec4 glColor;
+
+		void main(){
+			glColor = vec4(1, 0.0, 0.0, 1.0);
+		}
+	`
     );
 
     gl.attachShader(program, glVertexShader);
