@@ -135,29 +135,70 @@ export class WebGLRenderer {
     const program = this.getProgram(scene, geo, mat, object);
 
     this.state.useProgram(program);
-    this.prepareUnifroms(mat, camera);
 
-    const frontFaceCW = true;
-    this.state.setMaterial(mat, frontFaceCW);
-    this.bindingStates.setup(object, mat, program, geo, geo.index);
+    const context = this.gl;
+    const positions = new Float32Array([
+      -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
+    ]);
+    const positionBuffer = context.createBuffer();
+    context.bindBuffer(context.ARRAY_BUFFER, positionBuffer);
+    context.bufferData(context.ARRAY_BUFFER, positions, context.STATIC_DRAW);
 
-    this.objects.update(object);
+    const positionLocation = context.getAttribLocation(
+      program.program,
+      "aPosition"
+    );
+    context.enableVertexAttribArray(positionLocation);
+    context.vertexAttribPointer(
+      positionLocation,
+      2,
+      context.FLOAT,
+      false,
+      0,
+      0
+    );
 
-    this.renderer.setMode(this.gl.TRIANGLES);
-    const { drawRange } = geo;
-    let drawStart = drawRange.start;
-    let drawEnd = drawRange.start + drawRange.count;
-    if (geo.index) {
-      drawStart = Math.max(drawStart, 0);
-      drawEnd = Math.min(drawEnd, geo.index.count);
-      const indexBufferInfo = this.attributes.get(geo.index);
-      this.renderer.renderIndex(
-        drawEnd - drawStart,
-        drawStart,
-        indexBufferInfo.type,
-        indexBufferInfo.bytesPerElement
-      );
-    }
+    const indicies = new Uint16Array([0, 1, 2, 0, 2, 3]);
+    const indexBuffer = context.createBuffer();
+    context.bindBuffer(context.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    context.bufferData(
+      context.ELEMENT_ARRAY_BUFFER,
+      indicies,
+      context.STATIC_DRAW
+    );
+
+    createFramebuffer(context, 10, 10);
+    context.drawElements(context.TRIANGLES, 6, context.UNSIGNED_SHORT, 0);
+
+    this.readFromContext();
+    // context.drawElements(context.TRIANGLES, 6, context.UNSIGNED_SHORT, 0);
+    //   // for debug...
+
+    // this.prepareUnifroms(mat, camera);
+
+    // const frontFaceCW = true;
+    // this.state.setMaterial(mat, frontFaceCW);
+    // this.bindingStates.setup(object, mat, program, geo, geo.index);
+
+    // this.objects.update(object);
+
+    // this.renderer.setMode(this.gl.TRIANGLES);
+    // const { drawRange } = geo;
+    // let drawStart = drawRange.start;
+    // let drawEnd = drawRange.start + drawRange.count;
+    // if (geo.index) {
+    //   drawStart = Math.max(drawStart, 0);
+    //   drawEnd = Math.min(drawEnd, geo.index.count);
+    //   const indexBufferInfo = this.attributes.get(geo.index);
+    //   const context = this.gl;
+
+    //   this.renderer.renderIndex(
+    //     drawEnd - drawStart,
+    //     drawStart,
+    //     indexBufferInfo.type,
+    //     indexBufferInfo.bytesPerElement
+    //   );
+    // }
   }
 
   getUniformList(materialProperties: any) {
@@ -205,8 +246,8 @@ export class WebGLRenderer {
 
     // FOR DEBUG
     // console.log(uniforms);
-    console.log(pro.vertexGlsl);
-    console.log(pro.fragmentGlsl);
+    // console.log(pro.vertexGlsl);
+    // console.log(pro.fragmentGlsl);
 
     return pro;
   }
@@ -247,4 +288,41 @@ export class WebGLRenderer {
   createProgram(material: Material, parameters: any, programCacheKey: string) {
     return new WebGLProgram_w(material, parameters, this.gl, programCacheKey);
   }
+
+  readFromContext() {
+    const context = this.gl;
+    const result = new Float32Array(400);
+    context.readPixels(0, 0, 10, 10, context.RGBA, context.FLOAT, result);
+    console.log(result);
+  }
+}
+
+function createFramebuffer(
+  context: WebGL2RenderingContext,
+  width: number,
+  height: number
+) {
+  const framebufferTexture = context.createTexture();
+  context.bindTexture(context.TEXTURE_2D, framebufferTexture);
+  context.texImage2D(
+    context.TEXTURE_2D,
+    0,
+    context.RGBA32F,
+    width,
+    height,
+    0,
+    context.RGBA,
+    context.FLOAT,
+    null
+  );
+
+  const framebuffer = context.createFramebuffer();
+  context.bindFramebuffer(context.FRAMEBUFFER, framebuffer);
+  context.framebufferTexture2D(
+    context.FRAMEBUFFER,
+    context.COLOR_ATTACHMENT0,
+    context.TEXTURE_2D,
+    framebufferTexture,
+    0
+  );
 }

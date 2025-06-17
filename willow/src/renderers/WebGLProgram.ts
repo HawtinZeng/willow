@@ -224,16 +224,16 @@ export class WebGLProgram {
   ) {
     const shaderName = material.type;
     let vertexShader = ShaderLib[material.type].vertex;
-    vertexShader = resolveIncludes(vertexShader);
-    vertexShader = replaceLightNums(vertexShader, parameters);
-    vertexShader = replaceClippingPlaneNums(vertexShader, parameters);
-    vertexShader = unrollLoops(vertexShader);
+    // vertexShader = resolveIncludes(vertexShader);
+    // vertexShader = replaceLightNums(vertexShader, parameters);
+    // vertexShader = replaceClippingPlaneNums(vertexShader, parameters);
+    // vertexShader = unrollLoops(vertexShader);
 
     let fragmentShader = ShaderLib[material.type].fragment;
-    fragmentShader = resolveIncludes(fragmentShader);
-    fragmentShader = replaceLightNums(fragmentShader, parameters);
-    fragmentShader = replaceClippingPlaneNums(fragmentShader, parameters);
-    fragmentShader = unrollLoops(fragmentShader);
+    // fragmentShader = resolveIncludes(fragmentShader);
+    // fragmentShader = replaceLightNums(fragmentShader, parameters);
+    // fragmentShader = replaceClippingPlaneNums(fragmentShader, parameters);
+    // fragmentShader = unrollLoops(fragmentShader);
 
     const program = gl.createProgram();
     const prefixVertex = [
@@ -307,18 +307,18 @@ export class WebGLProgram {
 
     const vertexGlsl = prefixVertex + vertexShader;
     const fragmentGlsl = prefixFragment + fragmentShader;
-    this.vertexGlsl = vertexGlsl;
-    this.fragmentGlsl = fragmentGlsl;
+    this.vertexGlsl = vertexShader;
+    this.fragmentGlsl = fragmentShader;
 
     const glVertexShader = createWebGLShader(
       this.gl,
       this.gl.VERTEX_SHADER,
-      vertexGlsl
+      vertexShader
     );
     const glFragmentShader = createWebGLShader(
       this.gl,
       this.gl.FRAGMENT_SHADER,
-      fragmentGlsl
+      fragmentShader
     );
 
     gl.attachShader(program, glVertexShader);
