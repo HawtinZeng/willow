@@ -20,6 +20,7 @@ import { ShaderLib } from "./ShaderLib";
 import { UniformsUtils } from "./UniformsUtils";
 import { WebGLUniforms } from "./WebGLUniforms";
 import { WebGLMaterials } from "./WebGLMaterials";
+import { Float32BufferAttribute, Int16BufferAttribute } from "../core/BufferAttribute";
 
 export class WebGLRenderer {
   private currentState: any;
@@ -93,6 +94,7 @@ export class WebGLRenderer {
     // get all objects.
     // for each object, bind buffer and drawArray
 
+    this.renderer.setMode(this.gl.TRIANGLES)
     this.renderObjects(scene, camera);
   }
   renderObjects(scene: Scene, camera: Camera) {
@@ -135,42 +137,25 @@ export class WebGLRenderer {
     const program = this.getProgram(scene, geo, mat, object);
 
     this.state.useProgram(program);
-
     const context = this.gl;
-    const positions = new Float32Array([
-      -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
-    ]);
-    const positionBuffer = context.createBuffer();
-    context.bindBuffer(context.ARRAY_BUFFER, positionBuffer);
-    context.bufferData(context.ARRAY_BUFFER, positions, context.STATIC_DRAW);
+    // object.geometry.attributes.position = new Float32BufferAttribute(
+    //   [
+    //     -1, -1,1,
+    //     1, 1,1,
+    //     1, -1, 1,
+    //   ],
+    //   3
+    // );
+    // object.geometry.index = new Int16BufferAttribute([0, 1, 2, 3, 4, 5], 1)
 
-    const positionLocation = context.getAttribLocation(
-      program.program,
-      "aPosition"
-    );
-    context.enableVertexAttribArray(positionLocation);
-    context.vertexAttribPointer(
-      positionLocation,
-      2,
-      context.FLOAT,
-      false,
-      0,
-      0
-    );
+    const offset = 0;
+    this.objects.update(object);
+    this.bindingStates.setup(object, mat, program, geo, geo.index);
 
-    const indicies = new Uint16Array([0, 1, 2, 0, 2, 3]);
-    const indexBuffer = context.createBuffer();
-    context.bindBuffer(context.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    context.bufferData(
-      context.ELEMENT_ARRAY_BUFFER,
-      indicies,
-      context.STATIC_DRAW
-    );
-
-    createFramebuffer(context, 10, 10);
-    context.drawElements(context.TRIANGLES, 6, context.UNSIGNED_SHORT, 0);
-
+    createFramebuffer(context, 2, 2);
+    this.renderer.renderIndex(object.geometry.index.count, offset,context.UNSIGNED_SHORT, 2)
     this.readFromContext();
+
     // context.drawElements(context.TRIANGLES, 6, context.UNSIGNED_SHORT, 0);
     //   // for debug...
 
@@ -178,9 +163,8 @@ export class WebGLRenderer {
 
     // const frontFaceCW = true;
     // this.state.setMaterial(mat, frontFaceCW);
-    // this.bindingStates.setup(object, mat, program, geo, geo.index);
-
     // this.objects.update(object);
+    // this.bindingStates.setup(object, mat, program, geo, geo.index);
 
     // this.renderer.setMode(this.gl.TRIANGLES);
     // const { drawRange } = geo;
@@ -291,8 +275,8 @@ export class WebGLRenderer {
 
   readFromContext() {
     const context = this.gl;
-    const result = new Float32Array(400);
-    context.readPixels(0, 0, 10, 10, context.RGBA, context.FLOAT, result);
+    const result = new Float32Array(16);
+    context.readPixels(0, 0, 2, 2, context.RGBA, context.FLOAT, result);
     console.log(result);
   }
 }

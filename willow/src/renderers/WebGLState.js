@@ -428,7 +428,7 @@ function WebGLState(gl, extensions) {
   enable(gl.DEPTH_TEST);
   depthBuffer.setFunc(LessEqualDepth);
 
-  setFlipSided(false);
+  setFlipSided(true);
   setCullFace(CullFaceBack);
   enable(gl.CULL_FACE);
 

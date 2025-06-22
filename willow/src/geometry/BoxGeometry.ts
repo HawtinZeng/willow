@@ -149,14 +149,15 @@ export class BoxGeometry extends Geometry {
         this.indices.push(a, b, d);
         this.indices.push(b, c, d);
 
-        // increase counter
 
+        // increase counter
         groupCount += 6;
       }
     }
 
     this.addGroup(this.groupStart, groupCount, materialIndex);
     this.groupStart += groupCount;
+    this.numberOfVertices += vertexCounter
 
     return vertices;
   }

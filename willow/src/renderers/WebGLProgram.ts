@@ -224,16 +224,16 @@ export class WebGLProgram {
   ) {
     const shaderName = material.type;
     let vertexShader = ShaderLib[material.type].vertex;
-    // vertexShader = resolveIncludes(vertexShader);
-    // vertexShader = replaceLightNums(vertexShader, parameters);
-    // vertexShader = replaceClippingPlaneNums(vertexShader, parameters);
-    // vertexShader = unrollLoops(vertexShader);
+    vertexShader = resolveIncludes(vertexShader);
+    vertexShader = replaceLightNums(vertexShader, parameters);
+    vertexShader = replaceClippingPlaneNums(vertexShader, parameters);
+    vertexShader = unrollLoops(vertexShader);
 
     let fragmentShader = ShaderLib[material.type].fragment;
-    // fragmentShader = resolveIncludes(fragmentShader);
-    // fragmentShader = replaceLightNums(fragmentShader, parameters);
-    // fragmentShader = replaceClippingPlaneNums(fragmentShader, parameters);
-    // fragmentShader = unrollLoops(fragmentShader);
+    fragmentShader = resolveIncludes(fragmentShader);
+    fragmentShader = replaceLightNums(fragmentShader, parameters);
+    fragmentShader = replaceClippingPlaneNums(fragmentShader, parameters);
+    fragmentShader = unrollLoops(fragmentShader);
 
     const program = gl.createProgram();
     const prefixVertex = [
@@ -259,16 +259,16 @@ export class WebGLProgram {
     precision highp usamplerCube;
     precision highp usampler2DArray;
     #define HIGH_PRECISION`,
-      "uniform mat4 modelMatrix;",
-      "uniform mat4 modelViewMatrix;",
-      "uniform mat4 projectionMatrix;",
-      "uniform mat4 viewMatrix;",
-      "uniform mat3 normalMatrix;",
-      "uniform vec3 cameraPosition;",
-      "uniform bool isOrthographic;",
-      "attribute vec3 position;",
-      "attribute vec3 normal;",
-      "attribute vec2 uv;",
+    "uniform mat4 modelMatrix;",
+    "uniform mat4 modelViewMatrix;",
+    "uniform mat4 projectionMatrix;",
+    "uniform mat4 viewMatrix;",
+    "uniform mat3 normalMatrix;",
+    "uniform vec3 cameraPosition;",
+    "uniform bool isOrthographic;",
+    "attribute vec3 position;",
+    "attribute vec3 normal;",
+    "attribute vec2 uv;",
     ].join("\n");
 
     const prefixFragment = [
@@ -305,20 +305,18 @@ export class WebGLProgram {
       getLuminanceFunction(),
     ].join("\n");
 
-    const vertexGlsl = prefixVertex + vertexShader;
-    const fragmentGlsl = prefixFragment + fragmentShader;
-    this.vertexGlsl = vertexShader;
-    this.fragmentGlsl = fragmentShader;
+    this.vertexGlsl = prefixVertex + vertexShader;;
+    this.fragmentGlsl = prefixFragment + fragmentShader;
 
     const glVertexShader = createWebGLShader(
       this.gl,
       this.gl.VERTEX_SHADER,
-      vertexShader
+      this.vertexGlsl
     );
     const glFragmentShader = createWebGLShader(
       this.gl,
       this.gl.FRAGMENT_SHADER,
-      fragmentShader
+      this.fragmentGlsl
     );
 
     gl.attachShader(program, glVertexShader);
