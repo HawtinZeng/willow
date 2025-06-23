@@ -15,6 +15,7 @@ export class Material {
   aoMap: any;
   vertexColors: any;
   color: Color;
+  colorWrite: boolean = true;
 
   constructor(color: string = "#ff0000") {
     this.color = new Color(color);

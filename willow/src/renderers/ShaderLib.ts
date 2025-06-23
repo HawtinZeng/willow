@@ -31,11 +31,11 @@ varying vec3 vViewPosition;
 #include <shadowmap_pars_vertex>
 #include <logdepthbuf_pars_vertex>
 #include <clipping_planes_pars_vertex>
-
+varying float matrixArray[16]; 
 varying vec3 pos;
-void main() {
-	pos = vec3(position);
 
+
+void main() {
 	#include <uv_vertex>
 	#include <color_vertex>
 	#include <morphinstance_vertex>
@@ -62,6 +62,8 @@ void main() {
 	#include <envmap_vertex>
 	#include <shadowmap_vertex>
 	#include <fog_vertex>
+  
+  gl_Position = vec4(position, 1.0);
 }
 `,
     fragment: `
@@ -97,7 +99,7 @@ uniform float opacity;
 #include <logdepthbuf_pars_fragment>
 #include <clipping_planes_pars_fragment>
 varying vec3 pos;
-
+uniform mat4 projectionMatrix;
 void main() {
 
 	vec4 diffuseColor = vec4( diffuse, opacity );
@@ -136,7 +138,8 @@ void main() {
 	#include <premultiplied_alpha_fragment>
 	#include <dithering_fragment>
 
-	pc_fragColor = vec4(pos, 1.0);
+	int x_index = int(gl_FragCoord.x - 0.5);
+	pc_fragColor = vec4(projectionMatrix[x_index]);
 }
 `,
     uniforms: mergeUniforms([

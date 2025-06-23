@@ -138,31 +138,32 @@ export class WebGLRenderer {
 
     this.state.useProgram(program);
     const context = this.gl;
-    // object.geometry.attributes.position = new Float32BufferAttribute(
-    //   [
-    //     -1, -1,1,
-    //     1, 1,1,
-    //     1, -1, 1,
-    //   ],
-    //   3
-    // );
-    // object.geometry.index = new Int16BufferAttribute([0, 1, 2, 3, 4, 5], 1)
+    object.geometry.attributes.position = new Float32BufferAttribute(
+      [
+        -1, -1,1,
+        1, 1,1,
+        1, -1, 1,
+        -1, 1, 1,
+      ],
+      3
+    );
+    const indexArray = [0, 1, 2, 0, 3, 1]
+    object.geometry.index = new Int16BufferAttribute(indexArray, 1)
 
-    const offset = 0;
+    this.prepareUnifroms(mat, camera);
+    const frontFaceCW = true;
+    this.state.setMaterial(mat, frontFaceCW);
+
     this.objects.update(object);
     this.bindingStates.setup(object, mat, program, geo, geo.index);
-
-    createFramebuffer(context, 2, 2);
-    this.renderer.renderIndex(object.geometry.index.count, offset,context.UNSIGNED_SHORT, 2)
+    
+    createFramebuffer(context, 4, 4);
+    this.renderer.renderIndex(indexArray.length, 0,context.UNSIGNED_SHORT, 2)
     this.readFromContext();
 
     // context.drawElements(context.TRIANGLES, 6, context.UNSIGNED_SHORT, 0);
     //   // for debug...
 
-    // this.prepareUnifroms(mat, camera);
-
-    // const frontFaceCW = true;
-    // this.state.setMaterial(mat, frontFaceCW);
     // this.objects.update(object);
     // this.bindingStates.setup(object, mat, program, geo, geo.index);
 
@@ -275,9 +276,9 @@ export class WebGLRenderer {
 
   readFromContext() {
     const context = this.gl;
-    const result = new Float32Array(16);
-    context.readPixels(0, 0, 2, 2, context.RGBA, context.FLOAT, result);
-    console.log(result);
+    const result = new Float32Array(16 * 4);
+    context.readPixels(0, 0, 4, 4, context.RGBA, context.FLOAT, result);
+    console.log(result)
   }
 }
 

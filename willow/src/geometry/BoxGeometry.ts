@@ -1,5 +1,5 @@
+import { Float32BufferAttribute } from "../core/BufferAttribute";
 import { Vector3 } from "../math/Vector3";
-import { Float32BufferAttribute } from "./float32Attribute";
 import { Geometry } from "./Geometry";
 
 export class BoxGeometry extends Geometry {
