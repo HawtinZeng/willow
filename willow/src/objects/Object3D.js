@@ -61,10 +61,9 @@ const _childremovedEvent = { type: "childremoved", child: null };
  * @augments EventDispatcher
  */
 class Object3D extends EventDispatcher {
-  /**
-   * Constructs a new 3D object.
-   */
   modelViewMatrix = new Matrix4();
+  normalMatrix = new Matrix3();
+
   constructor() {
     super();
 
@@ -198,15 +197,6 @@ class Object3D extends EventDispatcher {
         configurable: true,
         enumerable: true,
         value: scale,
-      },
-      /**
-       * Represents the object's normal matrix.
-       *
-       * @name Object3D#normalMatrix
-       * @type {Matrix3}
-       */
-      normalMatrix: {
-        value: new Matrix3(),
       },
     });
 

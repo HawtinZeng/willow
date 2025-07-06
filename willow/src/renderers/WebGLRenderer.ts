@@ -20,7 +20,10 @@ import { ShaderLib } from "./ShaderLib";
 import { UniformsUtils } from "./UniformsUtils";
 import { WebGLUniforms } from "./WebGLUniforms";
 import { WebGLMaterials } from "./WebGLMaterials";
-import { Float32BufferAttribute, Int16BufferAttribute } from "../core/BufferAttribute";
+import {
+  Float32BufferAttribute,
+  Int16BufferAttribute,
+} from "../core/BufferAttribute";
 
 export class WebGLRenderer {
   private currentState: any;
@@ -94,14 +97,24 @@ export class WebGLRenderer {
     // get all objects.
     // for each object, bind buffer and drawArray
 
-    this.renderer.setMode(this.gl.TRIANGLES)
+    this.renderer.setMode(this.gl.TRIANGLES);
     this.renderObjects(scene, camera);
   }
   renderObjects(scene: Scene, camera: Camera) {
-    scene.meshes.forEach((item: any) => {
+    scene.children.forEach((item: any) => {
       this.renderObject(item, camera, scene);
     });
   }
+
+  prepareObjUniforms(obj: Object3D) {
+    const p_uniforms = (
+      this.state.currentProgram as any as WebGLProgram_w
+    ).getUniforms();
+
+    p_uniforms.setValue(this.gl, "modelViewMatrix", obj.modelViewMatrix);
+    p_uniforms.setValue(this.gl, "modelMatrix", obj.matrixWorld);
+  }
+
   prepareUnifroms(mat: Material, ca: Camera) {
     const materialPros = WebGLRenderer.properties.get(mat);
     WebGLUniforms.upload(
@@ -119,15 +132,12 @@ export class WebGLRenderer {
     p_uniforms.setValue(this.gl, "viewMatrix", ca.matrixWorldInverse);
     p_uniforms.setValue(this.gl, "cameraPosition", ca.matrixWorld);
     p_uniforms.setValue(this.gl, "isOrthographic", ca.isOrthographicCamera);
-    p_uniforms.setValue(
-      this.gl,
-      "toneMappingExposure",
-      this.toneMappingExposure
-    );
   }
   renderObject(object: Mesh, camera: Camera, scene: Scene) {
     const geo = object.geometry;
     const mat = object.material;
+
+    camera.updateProjectionMatrix();
 
     object.modelViewMatrix.multiplyMatrices(
       camera.matrixWorldInverse,
@@ -137,33 +147,26 @@ export class WebGLRenderer {
     const program = this.getProgram(scene, geo, mat, object);
 
     this.state.useProgram(program);
-    const context = this.gl;
-    object.geometry.attributes.position = new Float32BufferAttribute(
-      [
-        -1, -1,1,
-        1, 1,1,
-        1, -1, 1,
-        -1, 1, 1,
-      ],
-      3
-    );
-    const indexArray = [0, 1, 2, 0, 3, 1]
-    object.geometry.index = new Int16BufferAttribute(indexArray, 1)
-
+    this.prepareObjUniforms(object);
     this.prepareUnifroms(mat, camera);
-    const frontFaceCW = true;
-    this.state.setMaterial(mat, frontFaceCW);
 
+    const context = this.gl;
+    const offset = 0;
     this.objects.update(object);
     this.bindingStates.setup(object, mat, program, geo, geo.index);
-    
-    createFramebuffer(context, 4, 4);
-    this.renderer.renderIndex(indexArray.length, 0,context.UNSIGNED_SHORT, 2)
-    this.readFromContext();
+
+    this.renderer.renderIndex(
+      object.geometry.index.count,
+      offset,
+      context.UNSIGNED_SHORT,
+      2
+    );
 
     // context.drawElements(context.TRIANGLES, 6, context.UNSIGNED_SHORT, 0);
     //   // for debug...
 
+    // const frontFaceCW = true;
+    // this.state.setMaterial(mat, frontFaceCW);
     // this.objects.update(object);
     // this.bindingStates.setup(object, mat, program, geo, geo.index);
 
@@ -220,6 +223,7 @@ export class WebGLRenderer {
         this.clipping
       );
       pro = this.createProgram(mat, parameters, programCacheKey);
+
       programs.set(programCacheKey, pro);
 
       const shader = ShaderLib[mat.type];
@@ -276,9 +280,16 @@ export class WebGLRenderer {
 
   readFromContext() {
     const context = this.gl;
-    const result = new Float32Array(16 * 4);
-    context.readPixels(0, 0, 4, 4, context.RGBA, context.FLOAT, result);
-    console.log(result)
+    const result = new Uint8Array(1000 * 1000 * 4);
+    context.readPixels(
+      0,
+      0,
+      1000,
+      1000,
+      context.RGBA,
+      context.UNSIGNED_BYTE,
+      result
+    );
   }
 }
 

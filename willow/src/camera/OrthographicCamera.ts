@@ -23,6 +23,13 @@ export class OrthographicCamera extends Camera {
     let right = cx + dx;
     let top = cy + dy;
     let bottom = cy - dy;
-    this.projectionMatrix.makeOrthographic(left, right, top, bottom, this.near);
+    this.projectionMatrix.makeOrthographic(
+      left,
+      right,
+      top,
+      bottom,
+      this.near,
+      this.far
+    );
   }
 }

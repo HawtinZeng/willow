@@ -1,8 +1,4 @@
 import { Mesh } from "../objects/mesh";
+import { Object3D } from "../objects/Object3D";
 
-export class Scene {
-  public meshes: Mesh[] = [];
-  add(mesh: Mesh) {
-    this.meshes.push(mesh);
-  }
-}
+export class Scene extends Object3D {}

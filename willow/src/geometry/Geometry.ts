@@ -12,6 +12,7 @@ export class Geometry extends EventDispatcher {
   groupStart: number = 0;
   index!: BufferAttribute;
   setAttribute(name: string, attribute: BufferAttribute) {
+    attribute.name = name;
     this.attributes[name] = attribute;
   }
   getAttribute(name: string) {
@@ -29,6 +30,7 @@ export class Geometry extends EventDispatcher {
       this.index = new (
         arrayNeedsUint32(index) ? Uint32BufferAttribute : Uint16BufferAttribute
       )(index, 1);
+      this.index.name = "index";
     } else {
       this.index = index;
     }

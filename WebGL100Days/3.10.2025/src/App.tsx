@@ -15,7 +15,6 @@ function App() {
       const geo = new BoxGeometry(1, 1, 1);
       const material = new MeshLambertMaterial("#ff0000");
       const mesh = new Mesh(material, geo);
-      mesh.translateX(10);
 
       const scene = new Scene();
       scene.add(mesh);
