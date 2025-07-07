@@ -98,11 +98,53 @@ export class WebGLRenderer {
     // for each object, bind buffer and drawArray
 
     this.renderer.setMode(this.gl.TRIANGLES);
+
+    this.compile(scene);
+
     this.renderObjects(scene, camera);
   }
   renderObjects(scene: Scene, camera: Camera) {
+    scene.updateMatrixWorld();
+    camera.updateMatrixWorld();
     scene.children.forEach((item: any) => {
-      this.renderObject(item, camera, scene);
+      if (item.isMesh) {
+        this.renderObject(item, camera, scene);
+      }
+    });
+  }
+
+  compile(scene: Scene) {
+    const state = this.renderState;
+    scene.traverseVisible(function (object: any) {
+      if (object.isLight) {
+        state.pushLight(object);
+
+        if (object.castShadow) {
+          state.pushShadow(object);
+        }
+      }
+    });
+    state.setupLights();
+
+    scene.traverse((object: any) => {
+      if (
+        !(object.isMesh || object.isPoints || object.isLine || object.isSprite)
+      ) {
+        return;
+      }
+
+      object.geometry.attributes.position = new Float32BufferAttribute(
+        [-1, -1, 1, 1, 1, 1, 1, -1, 1, -1, 1, 1],
+        3
+      );
+      const indexArray = [0, 1, 2, 0, 3, 1];
+
+      object.geometry.index = new Int16BufferAttribute(indexArray, 1);
+
+      const material = object.material;
+      if (material) {
+        this.getProgram(scene, material, object);
+      }
     });
   }
 
@@ -115,13 +157,13 @@ export class WebGLRenderer {
     p_uniforms.setValue(this.gl, "modelMatrix", obj.matrixWorld);
   }
 
-  prepareUnifroms(mat: Material, ca: Camera) {
+  prepareUniforms(mat: Material, ca: Camera) {
     const materialPros = WebGLRenderer.properties.get(mat);
+
     WebGLUniforms.upload(
       this.gl,
       this.getUniformList(materialPros),
       materialPros.uniforms
-      // textures, TODO
     );
 
     const p_uniforms = (
@@ -144,24 +186,25 @@ export class WebGLRenderer {
       object.matrixWorld
     );
 
-    const program = this.getProgram(scene, geo, mat, object);
+    const program = this.getProgram(scene, mat, object);
 
     this.state.useProgram(program);
     this.prepareObjUniforms(object);
-    this.prepareUnifroms(mat, camera);
+    this.prepareUniforms(mat, camera);
 
     const context = this.gl;
     const offset = 0;
     this.objects.update(object);
     this.bindingStates.setup(object, mat, program, geo, geo.index);
 
+    createFramebuffer(this.gl, 100, 100);
     this.renderer.renderIndex(
       object.geometry.index.count,
       offset,
       context.UNSIGNED_SHORT,
       2
     );
-
+    this.readFromContext();
     // context.drawElements(context.TRIANGLES, 6, context.UNSIGNED_SHORT, 0);
     //   // for debug...
 
@@ -203,7 +246,7 @@ export class WebGLRenderer {
     return materialProperties.uniformsList;
   }
 
-  getProgram(scene: Scene, geo: Geometry, mat: Material, obj: Object3D) {
+  getProgram(scene: Scene, mat: Material, obj: Object3D) {
     const programCacheKey = this.getProgramCacheKey(mat);
 
     const materialPros = WebGLRenderer.properties.get(mat);
@@ -227,10 +270,36 @@ export class WebGLRenderer {
       programs.set(programCacheKey, pro);
 
       const shader = ShaderLib[mat.type];
-      const t_uniforms = UniformsUtils.clone(shader.uniforms);
-      this.materials.refreshMaterialUniforms(t_uniforms, mat); // from mat to uniforms
 
-      materialPros.uniforms = t_uniforms;
+      const uniforms = UniformsUtils.clone(shader.uniforms) as any;
+      this.materials.refreshMaterialUniforms(uniforms, mat); // from mat to uniforms
+
+      // wire up the material to this renderer's lighting state
+      const lights = this.renderState.state.lights;
+      uniforms.ambientLightColor.value = lights.state.ambient;
+      uniforms.lightProbe.value = lights.state.probe;
+
+      uniforms.directionalLights.value = lights.state.directional;
+      uniforms.directionalLightShadows.value = lights.state.directionalShadow;
+      uniforms.spotLights.value = lights.state.spot;
+      uniforms.spotLightShadows.value = lights.state.spotShadow;
+      uniforms.rectAreaLights.value = lights.state.rectArea;
+      uniforms.ltc_1.value = lights.state.rectAreaLTC1;
+      uniforms.ltc_2.value = lights.state.rectAreaLTC2;
+      uniforms.pointLights.value = lights.state.point;
+      uniforms.pointLightShadows.value = lights.state.pointShadow;
+      uniforms.hemisphereLights.value = lights.state.hemi;
+
+      uniforms.directionalShadowMap.value = lights.state.directionalShadowMap;
+      uniforms.directionalShadowMatrix.value =
+        lights.state.directionalShadowMatrix;
+      uniforms.spotShadowMap.value = lights.state.spotShadowMap;
+      uniforms.spotLightMatrix.value = lights.state.spotLightMatrix;
+      uniforms.spotLightMap.value = lights.state.spotLightMap;
+      uniforms.pointShadowMap.value = lights.state.pointShadowMap;
+      uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
+
+      materialPros.uniforms = uniforms;
     }
 
     // FOR DEBUG
@@ -280,16 +349,9 @@ export class WebGLRenderer {
 
   readFromContext() {
     const context = this.gl;
-    const result = new Uint8Array(1000 * 1000 * 4);
-    context.readPixels(
-      0,
-      0,
-      1000,
-      1000,
-      context.RGBA,
-      context.UNSIGNED_BYTE,
-      result
-    );
+    const result = new Float32Array(100 * 100 * 4);
+    context.readPixels(0, 0, 100, 100, context.RGBA, context.FLOAT, result);
+    console.log(result);
   }
 }
 

@@ -7,6 +7,7 @@ import {
   WebGLRenderer,
   OrthographicCamera,
   MeshLambertMaterial,
+  DirectionalLight,
 } from "willow";
 
 function App() {
@@ -21,6 +22,15 @@ function App() {
 
       const renderer = new WebGLRenderer(cvs);
       const camera = new OrthographicCamera();
+      // For log glsl varable
+      camera.translateZ(4);
+
+      // camera.rotateY(30);
+      // camera.rotateX(90);
+
+      const light1 = new DirectionalLight(0xffffff, 0.3);
+      light1.position.set(3, 3, 3);
+      scene.add(light1);
 
       renderer.render(scene, camera);
     }

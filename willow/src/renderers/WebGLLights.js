@@ -234,7 +234,6 @@ function WebGLLights(extensions) {
         const uniforms = cache.get(light);
 
         uniforms.color.copy(light.color).multiplyScalar(light.intensity);
-
         if (light.castShadow) {
           const shadow = light.shadow;
 
