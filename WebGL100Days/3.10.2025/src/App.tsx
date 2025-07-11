@@ -13,7 +13,7 @@ import {
 function App() {
   const containerRef = useCallback((cvs: any) => {
     if (cvs) {
-      const geo = new BoxGeometry(1, 1, 1);
+      const geo = new BoxGeometry(10, 10, 10);
       const material = new MeshLambertMaterial("#ff0000");
       const mesh = new Mesh(material, geo);
 
@@ -23,12 +23,13 @@ function App() {
       const renderer = new WebGLRenderer(cvs);
       const camera = new OrthographicCamera();
       // For log glsl varable
-      camera.translateZ(4);
 
-      // camera.rotateY(30);
-      // camera.rotateX(90);
+      camera.rotateY(30);
+      camera.rotateX(90);
+      // camera.rotateZ(90);
+      // camera.translateZ(3);
 
-      const light1 = new DirectionalLight(0xffffff, 0.3);
+      const light1 = new DirectionalLight(0xff0000, 0.3);
       light1.position.set(3, 3, 3);
       scene.add(light1);
 
